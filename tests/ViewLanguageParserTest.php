@@ -17,12 +17,22 @@ class ViewLanguageParserTest
         );
         $compilationPath = $object->compile("test");
         return new Result(
-            file_get_contents($compilationPath)=='<h1>Hello, Lucian!</h1>
+            $this->removeCWD(file_get_contents($compilationPath))=='<!-- VL:START: /tests/views/test.html -->
+<h1><!-- VL:START: /tests/tags/Greeting/client.html -->
+Hello, Lucian!
+<!-- VL:END: /tests/tags/Greeting/client.html -->
+</h1>
 <ul>
     <?php foreach ($data["users"] as $user) { ?>
     <li><?php echo $user; ?></li>
     <?php } ?>
-</ul>'
-        );
+</ul>
+<!-- VL:END: /tests/views/test.html -->
+');
+    }
+
+    private function removeCWD(string $string): string
+    {
+        return str_replace(getcwd(),"", $string);
     }
 }

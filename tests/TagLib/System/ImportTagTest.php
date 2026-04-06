@@ -12,20 +12,26 @@ class ImportTagTest
     public function parse()
     {
         $object = new ImportTag(dirname(__DIR__, 2)."/views", "html", new ViewCompilation(dirname(__DIR__, 3)."/compilations", "homepage", "html"));
+        // die($object->parse("homepage", new EscapeTag()));
         return new Result(
-            $object->parse("homepage", new EscapeTag())=='<!-- VL:START: /home/aherne/work/framework/php-view-language-api/tests/views/homepage.html -->
-<!-- VL:START: /home/aherne/work/framework/php-view-language-api/tests/views/header.html -->
+            $this->removeCWD($object->parse("homepage", new EscapeTag()))=='<!-- VL:START: /tests/views/homepage.html -->
+<!-- VL:START: /tests/views/header.html -->
 <html>
 <body>
-<!-- VL:END: /home/aherne/work/framework/php-view-language-api/tests/views/header.html -->
+<!-- VL:END: /tests/views/header.html -->
 
 Welcome to homepage!
-<!-- VL:START: /home/aherne/work/framework/php-view-language-api/tests/views/footer.html -->
+<!-- VL:START: /tests/views/footer.html -->
 </body>
 </html>
-<!-- VL:END: /home/aherne/work/framework/php-view-language-api/tests/views/footer.html -->
+<!-- VL:END: /tests/views/footer.html -->
 
-<!-- VL:END: /home/aherne/work/framework/php-view-language-api/tests/views/homepage.html -->
+<!-- VL:END: /tests/views/homepage.html -->
 ');
+    }
+
+    private function removeCWD(string $string): string
+    {
+        return str_replace(getcwd(),"", $string);
     }
 }

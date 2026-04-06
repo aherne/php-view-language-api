@@ -10,9 +10,14 @@ class UserTagTest
     public function parseStartTag()
     {
         $object = new UserTag(__DIR__."/tags/Greeting/client.html");
-        return new Result($object->parseStartTag(["user"=>"Lucian"])=="<!-- VL:START: /home/aherne/work/framework/php-view-language-api/tests/tags/Greeting/client.html -->
+        return new Result($this->removeCWD($object->parseStartTag(["user"=>"Lucian"]))=="<!-- VL:START: /tests/tags/Greeting/client.html -->
 Hello, Lucian!
-<!-- VL:END: /home/aherne/work/framework/php-view-language-api/tests/tags/Greeting/client.html -->
+<!-- VL:END: /tests/tags/Greeting/client.html -->
 ");
+    }
+
+    private function removeCWD(string $string): string
+    {
+        return str_replace(getcwd(),"", $string);
     }
 }

@@ -17,9 +17,14 @@ class UserTagParserTest
             "html",
             new ViewCompilation(dirname(__DIR__)."/compilations", "userTagParser", "html")
         );
-        return new Result($object->parse('<p><Greeting:client user="Lucian"/></p>', new EscapeTag())=="<p><!-- VL:START: /home/aherne/work/framework/php-view-language-api/tests/tags/Greeting/client.html -->
+        return new Result($this->removeCWD($object->parse('<p><Greeting:client user="Lucian"/></p>', new EscapeTag()))=="<p><!-- VL:START: /tests/tags/Greeting/client.html -->
 Hello, Lucian!
-<!-- VL:END: /home/aherne/work/framework/php-view-language-api/tests/tags/Greeting/client.html -->
+<!-- VL:END: /tests/tags/Greeting/client.html -->
 </p>");
+    }
+
+    private function removeCWD(string $string): string
+    {
+        return str_replace(getcwd(),"", $string);
     }
 }
