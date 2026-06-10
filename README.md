@@ -14,10 +14,10 @@ Table of contents:
 
 ## About 
 
-This API is the PHP compiler for ViewLanguage templating engine, a markup language inspired by JSP&JSTL @ Java that acts like an extension of HTML standard, designed to completely eliminate the need for scripting in views by:
+This API is the PHP compiler for the ViewLanguage templating engine, a markup language inspired by JSP/JSTL @ Java that acts like an extension of HTML standard, designed to remove scripting from views by:
 
 - interfacing variables through **[expressions](#expressions)**.
-- interfacing logics (control structures, repeating html segments) through **[tags](#tags)**
+- interfacing logic (control structures, repeating HTML segments) through **[tags](#tags)**
 
 ![diagram](https://www.lucinda-framework.com/view-language-api.svg)
 
@@ -26,7 +26,7 @@ In order to achieve its goals, following steps need to be observed:
 - **[configuration](#configuration)**: setting up an XML file where templating is configured
 - **[compilation](#compilation)**: using [Lucinda\Templating\Wrapper](https://github.com/aherne/php-view-language-api/blob/master/src/Wrapper.php) to read above XML and compile a template
 
-API is fully PSR-4 compliant, only requiring PHP8.1+ interpreter and SimpleXML extension. To quickly see how it works, check:
+API is fully PSR-4 compliant, requiring only PHP 8.1+ and the SimpleXML extension. To quickly see how it works, check:
 
 - **[installation](#installation)**: describes how to install API on your computer, in light of steps above
 - **[unit tests](#unit-tests)**: API has 100% Unit Test coverage, using [UnitTest API](https://github.com/aherne/unit-testing) instead of PHPUnit for greater flexibility
@@ -55,12 +55,14 @@ A very powerful feature is the **ability to nest expressions**: writing expressi
 | --- | --- |
 | ${foo.bar.${baz}} | $foo["bar"][$baz] |
 
+Expressions are rendered as raw PHP output by default. If templates render user-controlled HTML, either escape values explicitly in templates or enable `escape_expressions="true"` in configuration, which wraps expression output in `htmlspecialchars`.
+
 ## Tags
 
-A **tag** is a ViewLanguage representation of a *scripting logic*. All tags act like an extension of HTML standard and as such they have names and optionally attributes and bodies. There are two types of tags known by ViewLanguage:
+A **tag** is a ViewLanguage representation of *scripting logic*. All tags act like an extension of HTML standard and as such they have names and, depending on tag type, attributes and bodies. There are two types of tags known by ViewLanguage:
 
 - [macro tags](#macro-tags): api-defined tags to be processed before content is compiled.
-- [library tags](#library-tags): api/user-defined tags subject to compilation that belong to a library and have an unique name within that library.
+- [library tags](#library-tags): api/user-defined tags subject to compilation that belong to a library and have a unique name within that library.
 
 A very powerful feature is the **ability of tags to be recursive**: it is allowed to put View Language tags inside View Language tags. Whenever that happens, compiler goes progressively deeper until no tags are left!
 
@@ -86,28 +88,29 @@ At the moment, it is not possible for users to define their own macro tags!
 
 ### Library Tags
 
-**Library tags** are compilable api/user-defined HTML snippets expected to implement scripting logic in a View Language application. They are non-static repeating snippets of template (html) code that depend on variables and thus can't be loaded using <include>.
+**Library tags** are compilable api/user-defined snippets expected to implement scripting logic in a ViewLanguage application. They are non-static repeating snippets of template code that depend on variables and thus cannot be loaded using a plain HTML include.
  
-Their syntax extends HTML standard:
+Standard tags may have bodies:
 ```html
-<LIBRARY:TAG ATTRIBUTE="value" ...>...</LIBRARY:TAG>
+<:TAG ATTRIBUTE="value" ...>...</:TAG>
 ```
-or, if they have no body:
+
+Standard tags without bodies and user-defined tags are declared as single tags:
 ```html
 <LIBRARY:TAG ATTRIBUTE="value" .../>
 ```
 
 Where:
 - *LIBRARY*: namespace that contains related logical operations to perform on a template. Rules:
-    - Value must be lowercase and alphanumeric.
-    - "-" sign is allowed as well to replace spaces in multi-word values
-- *TAG*: name of tag that performs a single logical operation.Rules:
-    - Value must be lowercase and alphanumeric.
-    - sign is allowed as well to replace spaces in multi-word values
+    - Value must be alphanumeric or underscore.
+    - "-" sign is allowed as well to replace spaces in multi-word values.
+- *TAG*: name of tag that performs a single logical operation. Rules:
+    - Value must be alphanumeric or underscore.
+    - "-" sign is allowed as well to replace spaces in multi-word values.
 - *ATTRIBUTE*: configures tag behavior (can be zero or more). Rules:
-    - Name must be lowercase and alphanumeric.
-    - "_" sign is allowed as well to replace spaces in multi-word names
+    - Name must be alphanumeric, underscore, dash or dot.
     - Value can only be primitive (string or number) or ViewLanguage expressions.
+    - Value must be double-quoted. Empty values are allowed.
     - Unlike standard HTML, attributes cannot be multilined currently.
     
 #### Standard Tags
@@ -116,8 +119,8 @@ API includes a **standard library** containing tags for programming language ins
 - [:for](#tag-for): iterates numerically through a list
 - [:foreach](#tag-foreach): iterates through a dictionary by key and value
 - [:if](#tag-if): evaluates body fitting condition
-- [:elseif](#tag-elseif): evaluates body fitting condition that did not met previous if/elseif.
-- [:else](#tag-else): evaluates body that did not met previous if/else if
+- [:elseif](#tag-elseif): evaluates body fitting condition that did not match previous if/elseif.
+- [:else](#tag-else): evaluates body that did not match previous if/elseif.
 - [:set](#tag-set): creates a variable and/or sets a value for it.
 - [:unset](#tag-unset): unsets a variable.
 - [:while](#tag-while): performs a loop on condition.
@@ -133,8 +136,10 @@ Standard tags work with *ATTRIBUTE* values of following types:
 
 In order to break up HTML response into discrete units, developers must create their own libraries & tags. User defined tags are found on disk according to these rules:
 
-- library name must be a folder inside tags folder supplied on compilation
-- tag code muse be a HTML file inside library folder whose name equals *name*
+- library name must be a folder inside tags folder supplied on compilation.
+- tag code must be a template file inside library folder whose name equals *name*.
+- user-defined tags are expansion tags: they do not have closing tags or bodies.
+- template, namespace and tag paths are contained inside their configured root folders. Absolute paths, empty path segments and `..` traversal are rejected.
 
 | ViewLanguage Example | PHP Translation |
 | --- | --- |
@@ -142,10 +147,16 @@ In order to break up HTML response into discrete units, developers must create t
 
 ## Configuration
 
-To configure this API you must have a XML with a **templating** tag inside:
+To configure this API you must have an XML with a **templating** tag inside:
 
 ```xml
-<templating compilations_path="..." tags_path="..." templates_path="..." templates_extension="..." />
+<templating
+    compilations_path="..."
+    tags_path="..."
+    templates_path="..."
+    templates_extension="..."
+    debug="..."
+    escape_expressions="..." />
 ```
 
 Where:
@@ -154,11 +165,21 @@ Where:
 - **tags_path**: (optional) path into which ViewLanguage tag libraries are located
 - **templates_path**: (optional) path into which templates are located
 - **templates_extension**: (optional) template files extension. If not set, "html" is assumed!
+- **debug**: (optional) whether VL source comments should be kept in rendered HTML. If not set, "false" is assumed!
+- **escape_expressions**: (optional) whether expression output should be HTML-escaped using `htmlspecialchars`. If not set, "false" is assumed!
+
+Template imports, namespace folders and user tag files are resolved inside their configured roots. The compiler rejects absolute paths, empty path segments and `..` traversal.
 
 Example:
 
 ```xml
-<templating compilations_path="compilations" tags_path="application/taglib" templates_path="application/views" templates_extension="html"/>
+<templating
+    compilations_path="compilations"
+    tags_path="application/taglib"
+    templates_path="application/views"
+    templates_extension="html"
+    debug="false"
+    escape_expressions="true"/>
 ```
 
 ## Compilation
@@ -166,14 +187,14 @@ Example:
 Once you have completed step above, you need to instantiate [Lucinda\Templating\Wrapper](https://github.com/aherne/php-view-language-api/blob/master/src/Wrapper.php) in order to be able to compile templates later on:
 
 ```php
-$wrapper = new Lucinda\SQL\Wrapper(simplexml_load_file(XML_FILE_NAME));
+$wrapper = new Lucinda\Templating\Wrapper(simplexml_load_file(XML_FILE_NAME));
 ```
 
 Object has following method that can be used to compile one or more templates:
 
 | Method | Arguments | Returns | Description |
 | --- | --- | --- | --- |
-| compile | string $template, array $data | string | Compiles ViewLanguage template into HTML and returns result |
+| compile | string $template, array $data | string | Compiles ViewLanguage template into HTML and returns result. Throws `ViewException` when compilation or rendering fails. |
  
  
 ### How are templates compiled?
@@ -191,6 +212,20 @@ As in any other templating language, compilation first traverses the tree of dep
      
 Since the whole process is somewhat performance hungry, PHP compilation files will be cached on disk and returned directly on next requests unless one of its components (template or tag) has changed. This makes API able to compile in around 0.001 sec amortised time, thus bringing no performance taxation whatsoever but all the advantages of an elegant view!
 
+### Debugging
+
+Compiled files are wrapped with source comments:
+
+```html
+<!-- VL:START: path/to/template.html -->
+...
+<!-- VL:END: path/to/template.html -->
+```
+
+These comments allow runtime errors in compiled PHP files to be mapped back to the template or user tag that generated them. Rendered HTML strips these comments by default. Set `debug="true"` to keep them in the rendered output while debugging.
+
+When a runtime warning or error happens while rendering a compiled view, it is wrapped in a `ViewException`. If the error points to the compiled file, the exception message includes the original source template/tag and line when possible.
+
 ## Installation
 
 First choose a folder where API will be installed then write this command there using console:
@@ -203,7 +238,7 @@ Then create a *configuration.xml* file holding configuration settings (see [conf
 
 ```php
 require(__DIR__."/vendor/autoload.php");
-$wrapper = new Lucinda\SQL\Wrapper(simplexml_load_file("configuration.xml"));
+$wrapper = new Lucinda\Templating\Wrapper(simplexml_load_file("configuration.xml"));
 ```
 
 To compile a template:
@@ -235,10 +270,22 @@ echo $html;
 
 For tests and examples, check following files/folders in API sources:
 
-- [unit-tests.sql](https://github.com/aherne/php-view-language-api/blob/master/unit-tests.xml): SQL commands you need to run ONCE on server (assuming MySQL) before unit tests execution
-- [test.php](https://github.com/aherne/php-view-language-api/blob/master/test.php): runs unit tests in console
-- [unit-tests.xml](https://github.com/aherne/php-view-language-api/blob/master/unit-tests.xml): sets up unit tests and mocks "sql" tag
-- [tests](https://github.com/aherne/php-view-language-api/tree/v3.0.0/tests): unit tests for classes from [src](https://github.com/aherne/php-view-language-api/tree/v3.0.0/src) folder
+- [test.php](https://github.com/aherne/php-view-language-api/blob/master/test.php): runs unit tests in console.
+- [unit-tests.xml](https://github.com/aherne/php-view-language-api/blob/master/unit-tests.xml): configures source and test namespaces for the UnitTest runner.
+- [tests](https://github.com/aherne/php-view-language-api/tree/v3.0.0/tests): unit tests for classes from [src](https://github.com/aherne/php-view-language-api/tree/v3.0.0/src) folder.
+- [phpstan.neon](https://github.com/aherne/php-view-language-api/blob/master/phpstan.neon): configures static analysis for `src`.
+
+Run unit tests:
+
+```console
+composer test
+```
+
+Run static analysis:
+
+```console
+composer analyse
+```
 
 ## Examples
 
@@ -307,11 +354,11 @@ Now let's compile *application/views/index.html* template (see **[compilation](#
 
 ```php
 require(__DIR__."/vendor/autoload.php");
-$wrapper = new Lucinda\SQL\Wrapper(simplexml_load_file("configuration.xml"));
+$wrapper = new Lucinda\Templating\Wrapper(simplexml_load_file("configuration.xml"));
 $html = $wrapper->compile("index", $data);
 ```
 
-First, ViewLanguage base template is compiled into PHP, results saved in a **compilations/index.php** file (in case it doesn't exist already) with following body:
+First, ViewLanguage base template is compiled into PHP, results saved in a **compilations/index.php** file (in case it doesn't exist already). Simplified output, omitting `VL:START`/`VL:END` source comments, looks like this:
 
 ```html
 <html>
@@ -383,7 +430,7 @@ Examples how this tag is compiled into PHP:
 
 | ViewLanguage Example | PHP Translation |
 | --- | --- |
-| &lt;import file="header"/&gt; | require_once($viewsFolder."/header.html") |
+| &lt;import file="header"/&gt; | contents of `$viewsFolder."/header.html"` are inlined into the compilation |
 
 ### tag namespace
 
@@ -430,8 +477,8 @@ Examples how this tag is compiled into PHP:
 
 | ViewLanguage Example | PHP Translation |
 | --- | --- |
-| &lt;:for var="i" start="0" end="10"&gt;<br/>...<br/>&lt;/:for&gt; | for($i=0; $i<=10; $i=$i+1){<br/>...<br/>} |
-| &lt;:for var="i" start="10" end="0" step="-1"&gt;<br/>...<br/>&lt;/:for&gt; | for($i=10; $i>=0; $i=$i-1){<br/>...<br/>} |
+| &lt;:for var="i" start="0" end="10"&gt;<br/>...<br/>&lt;/:for&gt; | for($i=0; $i<=10; $i+=1){<br/>...<br/>} |
+| &lt;:for var="i" start="10" end="0" step="-1"&gt;<br/>...<br/>&lt;/:for&gt; | for($i=10; $i>=0; $i-=1){<br/>...<br/>} |
 
 ### tag :foreach
 
@@ -469,7 +516,7 @@ Creates an IF condition. Syntax:
 </:if>
 ```
 
-Tag must not be closed if folowed by a [:else](#tag-else) or [:elseif](#tag-elseif)!
+If followed by [:elseif](#tag-elseif) or [:else](#tag-else), the `:if` block must be closed only once with `</:if>` after the final branch.
 
 Attributes:
 
@@ -495,7 +542,7 @@ Creates an ELSE IF condition. Syntax:
 </:if>
 ```
 
-Tag must not be closed if folowed by a [:else](#tag-else) or [:elseif](#tag-elseif)!
+The `:elseif` tag must appear inside an open `:if` block and is closed by the final `</:if>` tag.
 
 Attributes:
 
@@ -527,10 +574,10 @@ Examples how this tag is compiled into PHP:
 
 ### tag :set
 
-Sets a value to a variable.Syntax:
+Sets a value to a variable. Syntax:
 
 ```html
-<:set var="..." val="..."/>
+<:set var="..." (val="...")/>
 ```
 
 Attributes:
@@ -538,14 +585,14 @@ Attributes:
 | Name | Mandatory | Data Type | Description |
 | --- | --- | --- | --- |
 | var | Y | string | Name of variable to be created/updated. |
-| val | Y | string<br/>EXPRESSION | Value of variable. |
+| val | N | string<br/>EXPRESSION | Value of variable. If missing, variable is set to `null`. |
 
 Examples how this tag is compiled into PHP:
 
 | ViewLanguage Example | PHP Translation |
 | --- | --- |
-| &lt;:set var="a" val="10" | $a = 10; |
-| &lt;:set var="a" val="${x}" | $a = $x; |
+| &lt;:set var="a" val="10"/&gt; | $a = '10'; |
+| &lt;:set var="a" val="${x}"/&gt; | $a = $x; |
 
 ### tag :unset
 
@@ -566,7 +613,7 @@ Examples how this tag is compiled into PHP:
 
 | ViewLanguage Example | PHP Translation |
 | --- | --- |
-| &lt;:unset var="a" | unset($a); |
+| &lt;:unset var="a"/&gt; | unset($a); |
 
 ### tag :while
 
@@ -602,7 +649,7 @@ Examples how this tag is compiled into PHP:
 
 | ViewLanguage Example | PHP Translation |
 | --- | --- |
-| &lt;:break/:while&gt; | break; |
+| &lt;:break/&gt; | break; |
 
 ### tag :continue
 
@@ -616,4 +663,4 @@ Examples how this tag is compiled into PHP:
 
 | ViewLanguage Example | PHP Translation |
 | --- | --- |
-| &lt;:break/:while&gt; | break; |
+| &lt;:continue/&gt; | continue; |

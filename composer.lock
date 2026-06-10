@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "44a57ec7fd961997e077dd61fc452efb",
+    "content-hash": "89a8b9798ebc59ac431aff33ccb2db95",
     "packages": [],
     "packages-dev": [
         {
@@ -56,16 +56,16 @@
         },
         {
             "name": "lucinda/unit-testing",
-            "version": "v2.0.3",
+            "version": "2.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aherne/unit-testing.git",
-                "reference": "731a048d5999dd23094d785bd4814f2740a7f6cc"
+                "reference": "628c7f56ff7d90425070fcf8cacebac7bca0ab74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aherne/unit-testing/zipball/731a048d5999dd23094d785bd4814f2740a7f6cc",
-                "reference": "731a048d5999dd23094d785bd4814f2740a7f6cc",
+                "url": "https://api.github.com/repos/aherne/unit-testing/zipball/628c7f56ff7d90425070fcf8cacebac7bca0ab74",
+                "reference": "628c7f56ff7d90425070fcf8cacebac7bca0ab74",
                 "shasum": ""
             },
             "require": {
@@ -100,9 +100,62 @@
             ],
             "support": {
                 "issues": "https://github.com/aherne/unit-testing/issues",
-                "source": "https://github.com/aherne/unit-testing/tree/v2.0.3"
+                "source": "https://github.com/aherne/unit-testing/tree/2.0.5"
             },
-            "time": "2022-06-05T06:43:26+00:00"
+            "time": "2026-04-06T15:09:46+00:00"
+        },
+        {
+            "name": "phpstan/phpstan",
+            "version": "1.12.33",
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/37982d6fc7cbb746dda7773530cda557cdf119e1",
+                "reference": "37982d6fc7cbb746dda7773530cda557cdf119e1",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2|^8.0"
+            },
+            "conflict": {
+                "phpstan/phpstan-shim": "*"
+            },
+            "bin": [
+                "phpstan",
+                "phpstan.phar"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHPStan - PHP Static Analysis Tool",
+            "keywords": [
+                "dev",
+                "static analysis"
+            ],
+            "support": {
+                "docs": "https://phpstan.org/user-guide/getting-started",
+                "forum": "https://github.com/phpstan/phpstan/discussions",
+                "issues": "https://github.com/phpstan/phpstan/issues",
+                "security": "https://github.com/phpstan/phpstan/security/policy",
+                "source": "https://github.com/phpstan/phpstan-src"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/ondrejmirtes",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/phpstan",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-28T20:30:03+00:00"
         }
     ],
     "aliases": [],

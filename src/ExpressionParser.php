@@ -12,6 +12,16 @@ namespace Lucinda\Templating;
  */
 class ExpressionParser
 {
+    private bool $escapeOutput;
+
+    /**
+     * @param bool $escapeOutput Whether parsed expressions should be HTML-escaped.
+     */
+    public function __construct(bool $escapeOutput = false)
+    {
+        $this->escapeOutput = $escapeOutput;
+    }
+
     /**
      * Looks for variable expressions in SUBJECT and returns answer where expressions are converted to PHP.
      *
@@ -41,11 +51,25 @@ class ExpressionParser
         $position = strpos($matches[1], "(");
         if ($position!==false) {
             $variable = $this->convertToVariable(substr($matches[1], $position));
-            return '<?php echo '.substr($matches[1], 0, $position).$variable.'; ?>';
+            return $this->wrapOutput(substr($matches[1], 0, $position).$variable);
         } else {
             $variable = $this->convertToVariable($matches[0]);
-            return '<?php echo '.$variable.'; ?>';
+            return $this->wrapOutput($variable);
         }
+    }
+
+    /**
+     * Wraps parsed expression into a PHP echo scriptlet.
+     *
+     * @param string $expression PHP expression.
+     * @return string
+     */
+    private function wrapOutput(string $expression): string
+    {
+        if ($this->escapeOutput) {
+            return '<?php echo htmlspecialchars((string) ('.$expression.'), ENT_QUOTES, "UTF-8"); ?>';
+        }
+        return '<?php echo '.$expression.'; ?>';
     }
 
     /**

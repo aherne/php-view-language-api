@@ -40,6 +40,8 @@ class UserTagParser
      */
     public function parse(string $subject, EscapeTag $escaper): string
     {
+        $this->validate($subject);
+
         // match start & end tags
         $subject = preg_replace_callback(
             "/<([\w\-]+):([\w\-]+)\s*([^>]*)?>/",
@@ -60,6 +62,32 @@ class UserTagParser
     }
 
     /**
+     * Rejects malformed user tag declarations.
+     *
+     * @param string $subject
+     * @return void
+     * @throws ViewException
+     */
+    private function validate(string $subject): void
+    {
+        preg_match_all("/<[^>]*:[^>]*>/", $subject, $matches);
+        foreach ($matches[0] as $tag) {
+            if (str_starts_with($tag, "<!--")) {
+                continue;
+            }
+            if (str_starts_with($tag, "<:") || str_starts_with($tag, "</:")) {
+                continue;
+            }
+            if (!preg_match("/^<[\w\-]+:[\w\-]+\s*[^>]*>$/", $tag)) {
+                throw new ViewException("Invalid user tag declaration: ".$tag);
+            }
+            if (str_starts_with($tag, "</")) {
+                throw new ViewException("User tag must not have an end tag: ".$tag);
+            }
+        }
+    }
+
+    /**
      * Detects tag instance from tag declaration.
      *
      * @param  array<int,string> $matches
@@ -71,10 +99,7 @@ class UserTagParser
         $libraryName = $matches[1];
         $tagName = $matches[2];
         $tagFolder = $this->namespaces->get($libraryName);
-        $fileLocation = $tagFolder."/".$libraryName."/".$tagName.".".$this->tagExtension;
-        if (!file_exists($fileLocation)) {
-            throw new ViewException("User tag not found: ".$libraryName."/".$tagName);
-        }
+        $fileLocation = PathResolver::resolveUserTag($tagFolder, $libraryName, $tagName, $this->tagExtension);
         $this->viewCompilation->addComponent($fileLocation);
         return new UserTag($fileLocation);
     }

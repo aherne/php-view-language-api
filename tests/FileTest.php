@@ -17,7 +17,9 @@ class FileTest
     public function putContents()
     {
         $this->object->putContents("asdf");
-        return new Result(true);
+        $emptyFile = new File(__DIR__."/empty.txt");
+        $emptyFile->putContents("");
+        return new Result($emptyFile->getContents()==="");
     }
 
 

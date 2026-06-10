@@ -10,7 +10,12 @@
         "ext-SimpleXML": "*"
     },
     "require-dev": {
-    	"lucinda/unit-testing": "^2.0"
+    	"lucinda/unit-testing": "^2.0",
+        "phpstan/phpstan": "^1.12"
+    },
+    "scripts": {
+        "test": "php test.php",
+        "analyse": "phpstan analyse"
     },
     "autoload": {
     	"psr-4": {

@@ -3,6 +3,7 @@
 namespace Lucinda\Templating\TagLib\System;
 
 use Lucinda\Templating\AttributesParser;
+use Lucinda\Templating\PathResolver;
 use Lucinda\Templating\ViewException;
 
 /**
@@ -37,7 +38,7 @@ class NamespaceTag
      * tag declaration.
      *
      * @param  string $outputStream Output stream possibly containing <:namespace ...> tag declarations.
-     * @throws ViewException If referenced fikder could not be located on disk.
+     * @throws ViewException If referenced folder could not be located on disk.
      * @return string Output stream without <:namespace ...> tag declarations.
      */
     public function parse(string $outputStream): string
@@ -46,10 +47,8 @@ class NamespaceTag
             "/<namespace\s*(.*)\s*\/?>/",
             function ($matches) {
                 $parameters = $this->attributesParser->parse($matches[1]);
-                if (!file_exists($parameters["folder"])) {
-                    throw new ViewException("Invalid value of 'folder' attribute @ 'namespace' tag: ".$parameters["folder"]);
-                }
-                $this->namespaces[$parameters["taglib"]] = $parameters["folder"];
+                $folder = PathResolver::resolveFolder($this->taglibFolder, $parameters["folder"], "namespace");
+                $this->namespaces[$parameters["taglib"]] = $folder;
                 return "";
             },
             $outputStream

@@ -30,4 +30,11 @@ asdf'
     {
         return new Result($this->object->get("Greeting")==dirname(__DIR__, 2).'/tags');
     }
+
+    public function parseRelativeFolder()
+    {
+        $object = new NamespaceTag(dirname(__DIR__, 2)."/tags");
+        $object->parse('<namespace taglib="Greeting" folder="."/>');
+        return new Result($object->get("Greeting")==str_replace("\\", "/", realpath(dirname(__DIR__, 2)."/tags")));
+    }
 }

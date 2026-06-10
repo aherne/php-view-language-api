@@ -6,6 +6,7 @@ use Lucinda\Templating\UserTagParser;
 use Lucinda\Templating\ViewCompilation;
 use Lucinda\Templating\TagLib\System\NamespaceTag;
 use Lucinda\Templating\TagLib\System\EscapeTag;
+use Lucinda\Templating\ViewException;
 use Lucinda\UnitTest\Result;
 
 class UserTagParserTest
@@ -26,5 +27,20 @@ Hello, Lucian!
     private function removeCWD(string $string): string
     {
         return str_replace(getcwd(),"", $string);
+    }
+
+    public function rejectTraversal()
+    {
+        $object = new UserTagParser(
+            new NamespaceTag(__DIR__."/tags"),
+            "html",
+            new ViewCompilation(dirname(__DIR__)."/compilations", "userTagParserTraversal", "html")
+        );
+        try {
+            $object->parse('<Greeting:../client user="Lucian"/>', new EscapeTag());
+            return new Result(false);
+        } catch (ViewException $e) {
+            return new Result(str_contains($e->getMessage(), "User tag not found") || str_contains($e->getMessage(), "Invalid user tag"));
+        }
     }
 }

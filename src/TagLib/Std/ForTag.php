@@ -25,9 +25,12 @@ class ForTag extends SystemTag implements StartEndTag
     {
         $this->checkParameters($parameters, array("var", "start", "end"));
         $step = ($parameters['step'] ?? 1);
+        if (!is_numeric($step) || (int) $step===0) {
+            throw new ViewException("Invalid value of 'step' attribute @ ':for' tag: ".$step);
+        }
         $left = '$'.$parameters['var'].'='.$this->parseCounter($parameters['start']);
         $middle = '$'.$parameters['var'].($step>0 ? "<" : ">").'='.$this->parseCounter($parameters['end']);
-        $right = '$'.$parameters['var'].($step>0 ? "+" : "-")."=".$step;
+        $right = '$'.$parameters['var'].($step>0 ? "+=" : "-=").abs((int) $step);
         return '<?php for ('.$left.'; '.$middle.'; '.$right.') { ?>';
     }
 

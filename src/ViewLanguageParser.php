@@ -19,6 +19,7 @@ class ViewLanguageParser
     private string $compilationsFolder;
     private string $templatesExtension;
     private string $tagLibFolder;
+    private bool $escapeExpressions;
 
     /**
      * Constructs a view language parser.
@@ -32,12 +33,14 @@ class ViewLanguageParser
         string $templatesFolder,
         string $templatesExtension,
         string $compilationsFolder,
-        string $tagLibFolder = ""
+        string $tagLibFolder = "",
+        bool $escapeExpressions = false
     ) {
         $this->templatesFolder = $templatesFolder;
         $this->templatesExtension = $templatesExtension;
         $this->compilationsFolder= $compilationsFolder;
         $this->tagLibFolder = $tagLibFolder;
+        $this->escapeExpressions = $escapeExpressions;
     }
 
     /**
@@ -77,7 +80,7 @@ class ViewLanguageParser
         $outputStream = $systemTagParser->parse($outputStream);
 
         // run expression parser
-        $expressionParser = new ExpressionParser();
+        $expressionParser = new ExpressionParser($this->escapeExpressions);
         $outputStream = $expressionParser->parse($outputStream);
 
         // restore escaped content

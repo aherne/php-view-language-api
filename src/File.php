@@ -39,7 +39,7 @@ class File
             }
         }
         $response = file_put_contents($this->path, $content);
-        if (!$response) {
+        if ($response === false) {
             throw new ViewException("Could not write compilation: ".$this->path);
         }
     }

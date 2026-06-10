@@ -11,6 +11,8 @@ class Wrapper
     private string $compilationsFolder;
     private string $templatesExtension;
     private string $tagLibFolder;
+    private bool $debug;
+    private bool $escapeExpressions;
 
     /**
      * Calls for interpreting contents of <application> XML tag.
@@ -48,6 +50,8 @@ class Wrapper
         if (!$this->templatesExtension) {
             $this->templatesExtension = "html";
         }
+        $this->debug = ((string) $xml["debug"]==="true" || (string) $xml["debug"]==="1");
+        $this->escapeExpressions = ((string) $xml["escape_expressions"]==="true" || (string) $xml["escape_expressions"]==="1");
     }
 
     /**
@@ -64,13 +68,15 @@ class Wrapper
         if ($this->templatesFolder && str_starts_with($viewFile, $this->templatesFolder)) {
             $viewFile = substr($viewFile, strlen($this->templatesFolder)+1);
         }
+        $viewFile = PathResolver::normalize($viewFile);
 
         // compiles templates recursively into a single HTML compilation file
         $vlp = new ViewLanguageParser(
             $this->templatesFolder,
             $this->templatesExtension,
             $this->compilationsFolder,
-            $this->tagLibFolder
+            $this->tagLibFolder,
+            $this->escapeExpressions
         );
         $compilationFile = $vlp->compile($viewFile);
 
@@ -89,13 +95,59 @@ class Wrapper
     {
         try {
             ob_start();
-            include $compilationFile;
+            $this->includeCompilation($compilationFile, $data);
             $output = ob_get_contents();
+        } catch (\Throwable $e) {
+            throw $this->createRuntimeException($compilationFile, $e);
         } finally {
             ob_end_clean();
         }
 
         // removes comments, by default
-        return preg_replace("/<!-- VL:(START|END):\s*(.*?)\s*-->/", "", $output);
+        return ($this->debug ? $output : preg_replace("/<!-- VL:(START|END):\s*(.*?)\s*-->/", "", $output));
+    }
+
+    /**
+     * Includes compiled PHP while converting runtime warnings into exceptions.
+     *
+     * @param string $compilationFile
+     * @param array $data
+     * @return void
+     */
+    private function includeCompilation(string $compilationFile, array $data): void
+    {
+        set_error_handler(
+            function (int $severity, string $message, string $file, int $line) {
+                if (!(error_reporting() & $severity)) {
+                    return false;
+                }
+                throw new \ErrorException($message, 0, $severity, $file, $line);
+            }
+        );
+        try {
+            include $compilationFile;
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * Builds a source-aware runtime exception from a compiled template error.
+     *
+     * @param string $compilationFile
+     * @param \Throwable $previous
+     * @return ViewException
+     */
+    private function createRuntimeException(string $compilationFile, \Throwable $previous): ViewException
+    {
+        $message = "Error while rendering compiled view: ".$previous->getMessage();
+        if (PathResolver::normalize($previous->getFile())===PathResolver::normalize($compilationFile)) {
+            $context = SourceContext::fromCompiledLine($compilationFile, $previous->getLine());
+            if ($context!==null) {
+                $message .= " @ ".$context["source"].":".$context["line"];
+            }
+            $message .= " (compiled: ".$compilationFile.":".$previous->getLine().")";
+        }
+        return new ViewException($message, 0, $previous);
     }
 }

@@ -4,6 +4,7 @@ namespace Test\Lucinda\Templating\TagLib\System;
 
 use Lucinda\Templating\TagLib\System\ImportTag;
 use Lucinda\Templating\ViewCompilation;
+use Lucinda\Templating\ViewException;
 use Lucinda\Templating\TagLib\System\EscapeTag;
 use Lucinda\UnitTest\Result;
 
@@ -33,5 +34,16 @@ Welcome to homepage!
     private function removeCWD(string $string): string
     {
         return str_replace(getcwd(),"", $string);
+    }
+
+    public function rejectTraversal()
+    {
+        $object = new ImportTag(dirname(__DIR__, 2)."/views", "html", new ViewCompilation(dirname(__DIR__, 3)."/compilations", "homepage", "html"));
+        try {
+            $object->parse("../tags/Greeting/client", new EscapeTag());
+            return new Result(false);
+        } catch (ViewException $e) {
+            return new Result(str_contains($e->getMessage(), "Invalid relative path"));
+        }
     }
 }

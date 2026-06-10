@@ -1,5 +1,6 @@
 compilations
 vendor
+tests/empty.txt
 .idea
 .settings
 .buildpath

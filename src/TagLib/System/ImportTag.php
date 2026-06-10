@@ -5,6 +5,7 @@ namespace Lucinda\Templating\TagLib\System;
 use Lucinda\Templating\TagComment;
 use Lucinda\Templating\ViewCompilation;
 use Lucinda\Templating\File;
+use Lucinda\Templating\PathResolver;
 use Lucinda\Templating\ViewException;
 
 /**
@@ -44,11 +45,8 @@ class ImportTag
      */
     public function parse(string $templateFile, EscapeTag $escaper): string
     {
-        $path = ($this->templatesFolder ? $this->templatesFolder."/" : "").$templateFile.".".$this->templatesExtension;
+        $path = PathResolver::resolveFile($this->templatesFolder, $templateFile, $this->templatesExtension, "import");
         $file = new File($path);
-        if (!$file->exists()) {
-            throw new ViewException("Invalid value of 'file' attribute @ 'import' tag: ".$templateFile);
-        }
         $subject = $file->getContents();
         $subject = $escaper->backup($subject);
         $this->viewCompilation->addComponent($path);

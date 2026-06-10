@@ -39,10 +39,14 @@ class AttributesParser
             }
         }
         $tmp = [];
-        preg_match_all('/([\w\-.]+)\s*=\s*"([^"]+)"/', $parameters, $tmp, PREG_SET_ORDER);
+        preg_match_all('/([\w\-.]+)\s*=\s*"([^"]*)"/', $parameters, $tmp, PREG_SET_ORDER);
         $output=[];
         foreach ($tmp as $values) {
             $output[$values[1]]=$values[2];
+        }
+        $leftover = trim(preg_replace('/([\w\-.]+)\s*=\s*"([^"]*)"/', "", $parameters));
+        if ($leftover && $leftover!=="/") {
+            throw new ViewException("Invalid attributes @ tag '".$this->getTagName()."': ".$parameters);
         }
         foreach ($this->required as $attributeName) {
             if (!isset($output[$attributeName])) {
@@ -62,6 +66,9 @@ class AttributesParser
         $matches = [];
         $trace = debug_backtrace();
         preg_match("/([[:alpha:]])\/([[:alpha:]])Tag.php$/", $trace[1]["file"], $matches);
+        if (empty($matches)) {
+            return "unknown";
+        }
         return ($matches[1]=="Std" ? ":" : "").strtolower($matches[2]);
     }
 }
