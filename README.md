@@ -11,7 +11,6 @@ Table of contents:
 - [Compilation](#compilation)
 - [Diagnostics](#debugging)
 - [Class responsibilities](#class-responsibilities)
-- [API naming changes](#api-naming-changes)
 - [Installation](#installation)
 - [Unit tests](#unit-tests)
 - [Examples](docs/examples.md)
@@ -131,7 +130,7 @@ PHP compilations are cached and reused while their dependencies, compiler settin
 
 The compiler preserves the original file and line while expanding imports, user tags, escaped sections, system tags and expressions. Template-language errors include the location of the failing construct. `ViewException::getSourceLocation()` returns that location as `['source' => $file, 'line' => $line]`, or `null` when unavailable.
 
-Each compiled PHP file has a separate `.map.json` file containing its source map. `SourceMapBuilder` creates the correspondence from the final document; `SourceMapStorage` owns serialization and cache validation. `SourceMap` itself holds and exposes only source locations. PHP syntax errors and runtime warnings/errors are wrapped in a `ViewException` with the mapped template or tag location and the original throwable as its previous exception. For exceptions thrown by helper functions, the renderer also checks the stack for the compiled template's call site.
+Each compiled PHP file has a separate `.map.json` file containing its source map. `History\SourceMapBuilder` creates the correspondence from the final document; `History\SourceMapStorage` owns serialization and cache validation. `History\SourceMap` itself holds and exposes only source locations. PHP syntax errors and runtime warnings/errors are wrapped in a `ViewException` with the mapped template or tag location and the original throwable as its previous exception. For exceptions thrown by helper functions, the renderer also checks the stack for the compiled template's call site.
 
 Literal PHP maps to its original lines. PHP generated from a directive maps to the directive's starting line. Separate PHP blocks are laid out on separate generated lines using whitespace inside PHP, so adjacent inline expressions can be distinguished without adding rendered whitespace.
 
@@ -147,11 +146,11 @@ Maps contain a format version, a compilation hash and the compiler configuration
 | --- | --- |
 | `Wrapper` | Rendering a configured template with application data. |
 | `ViewLanguageParser` | Compiling the dependency tree and preparing PHP layout. |
-| `SourceDocument` | Immutable text with original source spans. |
-| `SourceMap` | Immutable correspondence between compiled PHP lines and original source locations. |
-| `SourceMapBuilder` | Building line correspondences from the final source-aware document. |
-| `SourceMapStorage` | Persisting maps and validating their format, PHP hash and configuration. |
-| `SourceContext` | Resolving a compiled error location through its map. |
+| `History\SourceDocument` | Immutable text with original source spans. |
+| `History\SourceMap` | Immutable correspondence between compiled PHP lines and original source locations. |
+| `History\SourceMapBuilder` | Building line correspondences from the final source-aware document. |
+| `History\SourceMapStorage` | Persisting maps and validating their format, PHP hash and configuration. |
+| `History\SourceContext` | Resolving a compiled error location through its map. |
 | `ViewCompilation` | Cached PHP and its recorded template dependencies. |
 | `File` / `PathResolver` | File access and resolution within configured roots. |
 | `ExpressionParser` / `TagExpressionParser` | Translating output and attribute expressions. |
@@ -166,26 +165,6 @@ Maps contain a format version, a compilation hash and the compiler configuration
 Concrete implementation classes are final unless they have an explicit extension role. `ExpressionParser` supports `TagExpressionParser`, `Wrapper` retains its protected `bind()` hook, and `SystemTag` is the abstract base for standard tag operations.
 
 Path resolution, map construction, map storage and source-context lookup are instance operations. Their cooperating methods have no static call chain. Per-compilation state is held by instances.
-
-## API naming changes
-
-This development revision uses descriptive getter and operation names. Custom integrations using these lower-level methods must update their calls:
-
-| Previous call | Current call |
-| --- | --- |
-| `PathResolver::resolveFile()` / `resolveFolder()` / `resolveUserTag()` / `normalize()` | Call the same method on a `PathResolver` instance. |
-| `File::putContents()` | `File::setContents()` |
-| `SourceDocument::location()` | `SourceDocument::getSourceLocation()` |
-| `SourceDocument::generated()` | `SourceDocument::createGeneratedDocument()` |
-| `SourceDocument::error()` | `SourceDocument::createException()` |
-| `SourceMap::lookup()` | `$sourceMap->getSourceLocation()` |
-| `SourceMap::fromDocument($document)` | `$sourceMapBuilder->build($document)` |
-| `$sourceMap->save($file, $php, $configuration)` | `$sourceMapStorage->save($sourceMap, $file, $php, $configuration)` |
-| `SourceMap::load($file, $configuration)` | `$sourceMapStorage->load($file, $configuration)` |
-| `SourceContext::fromCompiledLine()` / `SourceContext::getSourceLocation()` | `$sourceContext->getSourceLocation()` on a `SourceContext` instance. |
-| `NamespaceTag::get()` | `NamespaceTag::getTagLibraryPath()` |
-
-`SourceDocument::layoutPhp()` is now a private compiler operation in `ViewLanguageParser`; document transformations no longer own PHP layout. The rendering entry point `Wrapper::compile()` retains its signature.
 
 ## Installation
 
