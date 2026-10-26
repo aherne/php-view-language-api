@@ -3,31 +3,41 @@
 namespace Lucinda\Templating;
 
 /**
- * Encapsulates a file and operations on file.
+ * Represents a filesystem file used by template compilation
+ *
+ * The file path is held privately. The instance reads template bytes, writes PHP or
+ * metadata while creating missing parent folders, and exposes existence and
+ * modification time for dependency validation. It does not parse template content.
+ *
+ * @see ViewCompilation
  */
-class File
+final class File
 {
-    private string $path;
+    /**
+     * Filesystem path used for file reads, writes and metadata queries
+     */
+    private string $filePath;
 
     /**
-     * Creates an object.
+     * Associates this file instance with a filesystem path
      *
-     * @param string $name Complete path of file.
+     * @param string $name Relative or absolute file path used by subsequent operations
      */
     public function __construct(string $name)
     {
-        $this->path = $name;
+        $this->filePath = $name;
     }
 
     /**
-     * Writes contents to file and creates it if it doesn't exist.
+     * Writes bytes to the file, creating missing parent directories
      *
-     * @param  string $content
-     * @throws ViewException If you are not allowed to write on that file.
+     * @param string $content Template compilation or metadata bytes to write
+     * @return void
+     * @throws ViewException If PHP cannot write the file
      */
-    public function putContents(string $content): void
+    public function setContents(string $content): void
     {
-        $folder = substr($this->path, 0, strrpos($this->path, "/"));
+        $folder = substr($this->filePath, 0, strrpos($this->filePath, "/"));
         if (!file_exists($folder)) {
             $parts = explode("/", $folder);
             $folder = "";
@@ -38,39 +48,43 @@ class File
                 }
             }
         }
-        $response = file_put_contents($this->path, $content);
+        $response = file_put_contents($this->filePath, $content);
         if ($response === false) {
-            throw new ViewException("Could not write compilation: ".$this->path);
+            throw new ViewException("Could not write compilation: ".$this->filePath);
         }
     }
 
     /**
-     * Gets contents of file.
+     * Gets the file's complete contents without text normalization
      *
-     * @return string
+     * PHP read failures follow the caller's configured warning-handler policy.
+     *
+     * @return string Exact file bytes on a successful read
      */
     public function getContents(): string
     {
-        return file_get_contents($this->path);
+        return file_get_contents($this->filePath);
     }
 
     /**
-     * Checks if file exists.
+     * Checks whether the held file path exists
      *
-     * @return boolean
+     * @return bool Whether PHP finds a filesystem entry at the file path
      */
     public function exists(): bool
     {
-        return file_exists($this->path);
+        return file_exists($this->filePath);
     }
 
     /**
-     * Gets modification time.
+     * Gets the file's last modification timestamp for dependency comparisons
      *
-     * @return int
+     * PHP metadata failures follow the caller's configured warning-handler policy.
+     *
+     * @return int Unix timestamp reported by the filesystem on success
      */
     public function getModificationTime(): int
     {
-        return filemtime($this->path);
+        return filemtime($this->filePath);
     }
 }

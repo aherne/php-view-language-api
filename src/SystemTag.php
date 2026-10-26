@@ -3,15 +3,23 @@
 namespace Lucinda\Templating;
 
 /**
- * Implements operations common to all parsable (non-system) tags. All parsable tag classes must extend it.
+ * Defines shared expression and attribute-validation operations for standard tags
+ *
+ * Concrete standard tags use these protected operations to translate conditions,
+ * loop expressions and assignments. Only operations required by subclasses are
+ * protected; tag-specific parsing remains with the concrete tag.
+ *
+ * @see TagExpressionParser
+ * @see StartTag
+ * @see StartEndTag
  */
 abstract class SystemTag
 {
     /**
-     * Checks if tag attribute values contain expressions.
+     * Checks whether an attribute contains template-expression notation
      *
-     * @param  string $expression
-     * @return boolean
+     * @param string $expression Attribute value to inspect
+     * @return bool Whether the value contains an opening ${ marker
      */
     protected function isExpression(string $expression): bool
     {
@@ -19,10 +27,11 @@ abstract class SystemTag
     }
 
     /**
-     * Converts expressions from tag attribute values into PHP.
+     * Translates an attribute expression into PHP without rendering it
      *
-     * @param  string $expression
-     * @return string
+     * @param string $expression Attribute value containing template-variable notation
+     * @return string PHP expression usable in a generated tag statement
+     * @throws ViewException If expression matching fails
      */
     protected function parseExpression(string $expression): string
     {
@@ -31,11 +40,12 @@ abstract class SystemTag
     }
 
     /**
-     * Verifies if tag has required attributes defined.
+     * Validates the required attributes of a concrete standard tag
      *
-     * @param  array<string,string> $parameters
-     * @param  string[]             $requiredParameters
-     * @throws ViewException If a required attribute is not found.
+     * @param array<string,string> $parameters Attribute values supplied by the declaration
+     * @param string[] $requiredParameters Names that must be present
+     * @return void
+     * @throws ViewException If any required attribute is absent
      */
     protected function checkParameters(array $parameters, array $requiredParameters): void
     {

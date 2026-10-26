@@ -2,20 +2,33 @@
 
 namespace Lucinda\Templating;
 
+use Lucinda\Templating\History\SourceDocument;
+
 /**
- * Implements scalar expressions that are going to be interpreted as PHP when response is displayed to client.
+ * Translates output expressions in template text into PHP echo statements
  *
- * Example of expression:
- *         ${request.client.ip}
- * This will be converted to:
- *         <?php echo $request["client"]["ip"]; ?>
+ * Dotted variables become array access and nested expressions may call PHP helpers.
+ * The optional escaping policy wraps output in HTML escaping; it defaults to raw
+ * output for text and console templates. Document parsing anchors generated PHP to
+ * the expression's original location.
+ *
+ * This class remains extensible because TagExpressionParser overrides expression
+ * translation for attributes instead of generating output statements.
+ *
+ * @see TagExpressionParser
+ * @see SourceDocument
  */
 class ExpressionParser
 {
+    /**
+     * Whether generated echo statements HTML-escape their expression values
+     */
     private bool $escapeOutput;
 
     /**
-     * @param bool $escapeOutput Whether parsed expressions should be HTML-escaped.
+     * Sets whether output expressions are wrapped in HTML escaping
+     *
+     * @param bool $escapeOutput Whether generated echo statements call htmlspecialchars
      */
     public function __construct(bool $escapeOutput = false)
     {
@@ -23,28 +36,37 @@ class ExpressionParser
     }
 
     /**
-     * Looks for variable expressions in SUBJECT and returns answer where expressions are converted to PHP.
+     * Translates output expressions in an untracked text string
      *
-     * @param  string $subject
-     * @return string
+     * @param string $subject Template text containing zero or more ${...} expressions
+     * @return string Text with expressions replaced by PHP output statements
+     * @throws ViewException If the expression regex cannot be evaluated
      */
     public function parse(string $subject): string
     {
-        if (!str_contains($subject, '${')) {
-            return $subject;
-        }
-        return preg_replace_callback(
-            "/[\$]\{((?:(?>[^{}]+?)|(?R))*?)\}/",
-            array($this,"parseCallback"),
-            $subject
+        return $this->parseDocument(new SourceDocument($subject))->getText();
+    }
+
+    /**
+     * Translates expressions while retaining each expression's source location
+     *
+     * @param SourceDocument $subject Template text with original file and line information
+     * @return SourceDocument Text containing generated PHP anchored to each expression
+     * @throws ViewException If the expression regex cannot be evaluated
+     */
+    public function parseDocument(SourceDocument $subject): SourceDocument
+    {
+        return $subject->replace(
+            '/\$\{((?:(?>[^{}]+?)|(?R))*?)\}/',
+            fn(array $matches): string => $this->parseCallback($matches)
         );
     }
 
     /**
-     * For each macro-expression found, calls for its conversion to PHP and wraps it up as scriptlet.
+     * Converts one captured output expression into a PHP echo statement
      *
-     * @param  array<int,string> $matches
-     * @return string
+     * @param array<int,string> $matches Complete expression at index zero and its body at index one
+     * @return string Generated PHP statement, optionally with HTML escaping
      */
     protected function parseCallback(array $matches): string
     {
@@ -59,10 +81,10 @@ class ExpressionParser
     }
 
     /**
-     * Wraps parsed expression into a PHP echo scriptlet.
+     * Wraps a PHP expression in the configured output operation
      *
-     * @param string $expression PHP expression.
-     * @return string
+     * @param string $expression PHP expression ready to evaluate
+     * @return string PHP echo statement with raw or HTML-escaped output
      */
     private function wrapOutput(string $expression): string
     {
@@ -73,10 +95,10 @@ class ExpressionParser
     }
 
     /**
-     * Performs conversion of expression to PHP.
+     * Translates dotted and nested template-variable notation into PHP access syntax
      *
-     * @param  string $dottedVariable
-     * @return string
+     * @param string $dottedVariable Template expression or expression fragment to convert
+     * @return string PHP variable, indexed access or expression fragment
      */
     protected function convertToVariable(string $dottedVariable): string
     {

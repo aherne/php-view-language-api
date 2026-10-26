@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\Std;
 use Lucinda\Templating\TagLib\Std\BreakTag;
 use Lucinda\UnitTest\Result;
 
-class BreakTagTest
+final class BreakTagTest
 {
     public function parseStartTag()
     {

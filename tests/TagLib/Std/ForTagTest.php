@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\Std;
 use Lucinda\Templating\TagLib\Std\ForTag;
 use Lucinda\UnitTest\Result;
 
-class ForTagTest
+final class ForTagTest
 {
     public function parseStartTag()
     {

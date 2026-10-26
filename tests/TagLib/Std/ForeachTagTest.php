@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\Std;
 use Lucinda\Templating\TagLib\Std\ForeachTag;
 use Lucinda\UnitTest\Result;
 
-class ForeachTagTest
+final class ForeachTagTest
 {
     public function parseStartTag()
     {

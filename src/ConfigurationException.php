@@ -3,8 +3,15 @@
 namespace Lucinda\Templating;
 
 /**
- * Exception thrown when developer misconfigures XML that sets templating policy
+ * Reports invalid XML configuration for the template renderer
+ *
+ * Configuration failures are separate from template syntax and execution failures.
+ * Wrapper throws this exception when the templating element or a mandatory setting
+ * is missing.
+ *
+ * @see Wrapper
+ * @see ViewException
  */
-class ConfigurationException extends \Exception
+final class ConfigurationException extends \Exception
 {
 }

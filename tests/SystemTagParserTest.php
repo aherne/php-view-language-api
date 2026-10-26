@@ -6,7 +6,7 @@ use Lucinda\Templating\SystemTagParser;
 use Lucinda\Templating\ViewException;
 use Lucinda\UnitTest\Result;
 
-class SystemTagParserTest
+final class SystemTagParserTest
 {
     public function parse()
     {
@@ -48,5 +48,14 @@ class SystemTagParserTest
         }
 
         return $results;
+    }
+    public function parseDocument()
+    {
+        try {
+            (new SystemTagParser())->parseDocument(new \Lucinda\Templating\History\SourceDocument("line\n<:unknown/>", 'system.tpl'));
+            return new Result(false);
+        } catch (ViewException $e) {
+            return new Result($e->getSourceLocation() === ['source'=>'system.tpl', 'line'=>2]);
+        }
     }
 }

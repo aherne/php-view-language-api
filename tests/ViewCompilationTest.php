@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating;
 use Lucinda\Templating\ViewCompilation;
 use Lucinda\UnitTest\Result;
 
-class ViewCompilationTest
+final class ViewCompilationTest
 {
     private $object;
 

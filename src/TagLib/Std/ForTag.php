@@ -7,19 +7,25 @@ use Lucinda\Templating\SystemTag;
 use Lucinda\Templating\ViewException;
 
 /**
- * Implements how a FOR clause is translated into a tag.
+ * Translates a counted-loop tag into a PHP for block
  *
- * Tag syntax:
- * <:for var="VARNAME" start="EXPRESSION|INTEGER" end="EXPRESSION|INTEGER" step="INTEGER">BODY</:for>
+ * The start and end bounds are inclusive. The optional nonzero step selects ascending
+ * or descending comparison and increment; it defaults to one.
+ *
+ * Tag syntax: <:for var="counter" start="0" end="10" step="1">body</:for>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class ForTag extends SystemTag implements StartEndTag
+final class ForTag extends SystemTag implements StartEndTag
 {
     /**
-     * Parses start tag.
+     * Translates a counted-loop tag into a PHP for block
      *
-     * @param  array<string,string> $parameters
-     * @return string
-     * @throws ViewException If required parameters aren't supplied
+     * Requires var, start and end; step is optional and must be nonzero.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
+     * @throws ViewException If required attributes or expression syntax are invalid
      */
     public function parseStartTag(array $parameters=[]): string
     {
@@ -35,9 +41,9 @@ class ForTag extends SystemTag implements StartEndTag
     }
 
     /**
-     * Parses end tag.
+     * Closes the PHP block opened by this tag
      *
-     * @return string
+     * @return string PHP closing-brace statement
      */
     public function parseEndTag(): string
     {
@@ -45,10 +51,11 @@ class ForTag extends SystemTag implements StartEndTag
     }
 
     /**
-     * Parses start & end attributes, which may be either integers or expressions.
+     * Translates a numeric-loop bound into PHP
      *
-     * @param  string $expression
-     * @return string
+     * @param string $expression Numeric literal, undecorated variable name or template expression
+     * @return string PHP value or variable access used in the generated bound
+     * @throws ViewException If template-expression matching fails
      */
     private function parseCounter(string $expression): string
     {

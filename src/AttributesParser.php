@@ -3,39 +3,50 @@
 namespace Lucinda\Templating;
 
 /**
- * Class performing regex parsing of tags for attributes.
+ * Parses double-quoted tag attributes and validates required attribute names
+ *
+ * The configured required-name list belongs to the parser instance. parse() returns
+ * attribute values indexed by name and rejects unmatched attribute syntax or missing
+ * required names. Source-aware callers attach the declaration's file and line to
+ * these syntax errors.
+ *
+ * @see SystemTagParser
+ * @see UserTagParser
  */
-class AttributesParser
+final class AttributesParser
 {
     /**
-     * @var string[]
+     * @var string[] Attribute names required by every declaration parsed by this instance
      */
-    private array $required = [];
+    private array $requiredAttributes = [];
 
     /**
-     * Constructs parser from required attributes.
+     * Configures which attribute names must be present in each parsed declaration
      *
-     * @param string[] $required Required attributes for tag.
+     * @param string[] $required Required names; an empty list allows any valid attribute set
      */
     public function __construct(array $required=[])
     {
-        $this->required = $required;
+        $this->requiredAttributes = $required;
     }
 
     /**
-     * Parses string for tag attributes via regex
+     * Parses double-quoted attribute assignments and validates required names
      *
-     * @param  string $parameters
-     * @throws ViewException If string doesn't included attributes required by tag
-     * @return array<string,string> Attributes by name and value.
+     * A trailing self-closing slash is accepted. Any remaining non-attribute syntax is
+     * rejected instead of being silently discarded.
+     *
+     * @param string $parameters Attribute text captured from a tag declaration
+     * @return array<string,string> Attribute values keyed by attribute name
+     * @throws ViewException If syntax is invalid or a required attribute is missing
      */
     public function parse(string $parameters): array
     {
         if (!$parameters || $parameters=="/") {
-            if (empty($this->required)) {
+            if (empty($this->requiredAttributes)) {
                 return [];
             } else {
-                throw new ViewException("Tag '".$this->getTagName()."' requires attributes: ".implode(", ", $this->required));
+                throw new ViewException("Tag '".$this->getTagName()."' requires attributes: ".implode(", ", $this->requiredAttributes));
             }
         }
         $tmp = [];
@@ -48,7 +59,7 @@ class AttributesParser
         if ($leftover && $leftover!=="/") {
             throw new ViewException("Invalid attributes @ tag '".$this->getTagName()."': ".$parameters);
         }
-        foreach ($this->required as $attributeName) {
+        foreach ($this->requiredAttributes as $attributeName) {
             if (!isset($output[$attributeName])) {
                 throw new ViewException("Tag '".$this->getTagName()."' requires attribute: ".$attributeName);
             }
@@ -57,9 +68,9 @@ class AttributesParser
     }
 
     /**
-     * Gets current tag name
+     * Gets a best-effort caller tag name for attribute error messages
      *
-     * @return string
+     * @return string Tag name inferred from the caller path, or unknown when no matching tag path is available
      */
     private function getTagName(): string
     {

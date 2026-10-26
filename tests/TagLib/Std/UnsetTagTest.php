@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\Std;
 use Lucinda\Templating\TagLib\Std\UnsetTag;
 use Lucinda\UnitTest\Result;
 
-class UnsetTagTest
+final class UnsetTagTest
 {
     public function parseStartTag()
     {

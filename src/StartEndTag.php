@@ -3,14 +3,20 @@
 namespace Lucinda\Templating;
 
 /**
- * Implements the blueprint of a tag that expects both start & end tags.
+ * Defines translation of a standard tag with both opening and closing declarations
+ *
+ * The inherited opening operation receives the tag attributes. The closing operation
+ * returns the PHP text that terminates the corresponding control-flow block.
+ *
+ * @see StartTag
+ * @see SystemTagParser
  */
 interface StartEndTag extends StartTag
 {
     /**
-     * Parses end tag.
+     * Translates the closing declaration of a block tag
      *
-     * @return string
+     * @return string PHP text that closes the corresponding control-flow block
      */
     public function parseEndTag(): string;
 }

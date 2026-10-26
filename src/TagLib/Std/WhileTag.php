@@ -7,19 +7,25 @@ use Lucinda\Templating\StartEndTag;
 use Lucinda\Templating\ViewException;
 
 /**
- * Implements how a WHILE clause is translated into a tag.
+ * Translates a conditional loop into a PHP while block
  *
- * Tag syntax:
- * <:while test="EXPRESSION">BODY</:while>
+ * The required test condition is translated into PHP and reevaluated before each
+ * iteration. The closing tag terminates the loop body.
+ *
+ * Tag syntax: <:while test="condition">body</:while>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class WhileTag extends SystemTag implements StartEndTag
+final class WhileTag extends SystemTag implements StartEndTag
 {
     /**
-     * Parses start tag.
+     * Translates a conditional loop into a PHP while block
      *
-     * @param  array<string,string> $parameters
-     * @return string
-     * @throws ViewException If required parameters aren't supplied
+     * Requires test, interpreted as the loop continuation condition.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
+     * @throws ViewException If required attributes or expression syntax are invalid
      */
     public function parseStartTag(array $parameters=[]): string
     {
@@ -28,9 +34,9 @@ class WhileTag extends SystemTag implements StartEndTag
     }
 
     /**
-     * Parses end tag.
+     * Closes the PHP block opened by this tag
      *
-     * @return string
+     * @return string PHP closing-brace statement
      */
     public function parseEndTag(): string
     {

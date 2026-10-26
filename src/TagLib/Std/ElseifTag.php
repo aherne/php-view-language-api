@@ -6,19 +6,25 @@ use Lucinda\Templating\StartTag;
 use Lucinda\Templating\SystemTag;
 
 /**
- * Implements how an ELSE IF clause is translated into a tag.
+ * Translates a conditional branch following an open if block into PHP
  *
- * Tag syntax:
- * <:elseif test="EXPRESSION">BODY
+ * The test attribute is required and is translated as a PHP condition. The enclosing
+ * :if group owns the closing tag shared by all branches.
+ *
+ * Tag syntax: <:elseif test="condition">body</:if>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class ElseifTag extends SystemTag implements StartTag
+final class ElseifTag extends SystemTag implements StartTag
 {
     /**
-     * Parses start tag.
+     * Translates a conditional branch following an open if block into PHP
      *
-     * @param  array<string,string> $parameters
-     * @return string
-     * @throws \Lucinda\Templating\ViewException
+     * Requires test, interpreted as a PHP condition.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
+     * @throws \Lucinda\Templating\ViewException If required attributes or expression syntax are invalid
      */
     public function parseStartTag(array $parameters=[]): string
     {

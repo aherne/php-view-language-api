@@ -7,19 +7,25 @@ use Lucinda\Templating\StartEndTag;
 use Lucinda\Templating\ViewException;
 
 /**
- * Implements how an IF clause is translated into a tag.
+ * Translates a conditional tag into a PHP if block
  *
- * Tag syntax:
- * <:if test="EXPRESSION">BODY</:if>
+ * The test attribute is required. Optional :elseif and :else declarations extend
+ * the group before its single closing tag.
+ *
+ * Tag syntax: <:if test="condition">body</:if>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class IfTag extends SystemTag implements StartEndTag
+final class IfTag extends SystemTag implements StartEndTag
 {
     /**
-     * Parses start tag.
+     * Translates a conditional tag into a PHP if block
      *
-     * @param  array<string,string> $parameters
-     * @return string
-     * @throws ViewException If required parameters aren't supplied
+     * Requires test, interpreted as a PHP condition.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
+     * @throws ViewException If required attributes or expression syntax are invalid
      */
     public function parseStartTag(array $parameters=[]): string
     {
@@ -28,9 +34,9 @@ class IfTag extends SystemTag implements StartEndTag
     }
 
     /**
-     * Parses end tag.
+     * Closes the PHP block opened by this tag
      *
-     * @return string
+     * @return string PHP closing-brace statement
      */
     public function parseEndTag(): string
     {

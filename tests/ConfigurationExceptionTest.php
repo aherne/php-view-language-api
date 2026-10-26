@@ -2,6 +2,6 @@
 
 namespace Test\Lucinda\Templating;
 
-class ConfigurationExceptionTest
+final class ConfigurationExceptionTest
 {
 }

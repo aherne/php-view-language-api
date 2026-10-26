@@ -2,17 +2,29 @@
 
 namespace Lucinda\Templating;
 
+use Lucinda\Templating\History\SourceDocument;
+
 /**
- * Defines a generic class to parse all user-defined procedural tags.
+ * Represents a user-defined tag template and its attribute substitution
+ *
+ * A tag instance holds one template file path. Attribute placeholders use $[name]
+ * syntax. Missing attributes become empty text; replacements retain the placeholder
+ * location in the tag file. Expansion returns text or a source-aware document.
+ *
+ * @see UserTagParser
+ * @see SourceDocument
  */
-class UserTag implements StartTag
+final class UserTag implements StartTag
 {
+    /**
+     * Resolved user-tag template file expanded by this instance
+     */
     private string $filePath;
 
     /**
-     * Constructs parser based on user-defined tag location.
+     * Associates the tag instance with its resolved template file
      *
-     * @param string $filePath Location of tag procedural file.
+     * @param string $filePath Existing user-tag template path
      */
     public function __construct(string $filePath)
     {
@@ -20,21 +32,28 @@ class UserTag implements StartTag
     }
 
     /**
-     * Parses start tag.
+     * Expands attribute placeholders and returns the tag's template text
      *
-     * @param  array<string,string> $parameters
-     * @return string
+     * @param array<string,string> $parameters Values substituted for $[name] placeholders
+     * @return string Tag template after attribute substitution
+     * @throws ViewException If placeholder matching fails
      */
     public function parseStartTag(array $parameters=[]): string
     {
-        $content= file_get_contents($this->filePath);
-        $comment = new TagComment($this->filePath);
-        return $comment->start().preg_replace_callback(
-            "/[\$]\[([\w\-.]+)\]/",
-            function ($match) use ($parameters) {
-                return ($parameters[$match[1]] ?? null);
-            },
-            $content
-        ).$comment->end();
+        return $this->parseDocument($parameters)->getText();
+    }
+
+    /**
+     * Expands attribute placeholders while preserving the tag file's source locations
+     *
+     * @param array<string,string> $parameters Values substituted for $[name]; absent values become empty text
+     * @return SourceDocument Expanded tag body with literal and generated spans
+     * @throws ViewException If placeholder matching fails
+     */
+    public function parseDocument(array $parameters = []): SourceDocument
+    {
+        $document = new SourceDocument((new File($this->filePath))->getContents(), $this->filePath);
+        return $document->replace('/[\$]\[([\w\-.]+)\]/',
+            static fn(array $match): string => $parameters[$match[1]] ?? "");
     }
 }

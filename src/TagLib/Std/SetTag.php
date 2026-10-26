@@ -4,21 +4,28 @@ namespace Lucinda\Templating\TagLib\Std;
 
 use Lucinda\Templating\SystemTag;
 use Lucinda\Templating\StartTag;
+use Lucinda\Templating\ViewException;
 
 /**
- * Implements how setting an internal variable is translated into a tag.
+ * Translates variable assignment into a PHP statement
  *
- * Tag syntax:
- * <:set var="VARNAME" val="EXPRESSION"/>
+ * The variable name is required. An omitted value assigns null. Expressions and
+ * recognized helper calls become PHP; other supplied values become quoted strings.
+ *
+ * Tag syntax: <:set var="name" val="value"/>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class SetTag extends SystemTag implements StartTag
+final class SetTag extends SystemTag implements StartTag
 {
     /**
-     * Parses start tag.
+     * Translates variable assignment into a PHP statement
      *
-     * @param  array<string,string> $parameters
-     * @return string
-     * @throws \Lucinda\Templating\ViewException
+     * Requires var; val may be a literal, expression or helper call and defaults to null.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
+     * @throws ViewException If required attributes or expression syntax are invalid
      */
     public function parseStartTag(array $parameters=[]): string
     {
@@ -39,12 +46,12 @@ class SetTag extends SystemTag implements StartTag
     }
 
     /**
-     * Checks if variable value is a function without expressions
-     * 
-     * @param string $expression
-     * @return bool
+     * Checks whether a value uses the supported undecorated helper-call syntax
+     *
+     * @param string $expression Attribute value to inspect before quoting it as a literal
+     * @return bool Whether the value is recognized as a helper call
      */
-    protected function isFunction(string $expression): bool
+    private function isFunction(string $expression): bool
     {
         return (bool) preg_match("/^[a-zA-Z0-9_'\"]+\s*\(([^\)]+)\)$/", $expression);
     }

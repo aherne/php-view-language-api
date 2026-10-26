@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\System;
 use Lucinda\Templating\TagLib\System\NamespaceTag;
 use Lucinda\UnitTest\Result;
 
-class NamespaceTagTest
+final class NamespaceTagTest
 {
     private $object;
 
@@ -26,15 +26,25 @@ asdf'
     }
 
 
-    public function get()
+    public function getTagLibraryPath()
     {
-        return new Result($this->object->get("Greeting")==dirname(__DIR__, 2).'/tags');
+        return new Result($this->object->getTagLibraryPath("Greeting")==dirname(__DIR__, 2).'/tags');
     }
 
     public function parseRelativeFolder()
     {
         $object = new NamespaceTag(dirname(__DIR__, 2)."/tags");
         $object->parse('<namespace taglib="Greeting" folder="."/>');
-        return new Result($object->get("Greeting")==str_replace("\\", "/", realpath(dirname(__DIR__, 2)."/tags")));
+        return new Result($object->getTagLibraryPath("Greeting")==str_replace("\\", "/", realpath(dirname(__DIR__, 2)."/tags")));
+    }
+    public function parseDocument()
+    {
+        $object = new NamespaceTag(dirname(__DIR__, 2).'/tags');
+        try {
+            $object->parseDocument(new \Lucinda\Templating\History\SourceDocument("line\n<namespace folder=\".\"/>", 'namespace.tpl'));
+            return new Result(false);
+        } catch (\Lucinda\Templating\ViewException $e) {
+            return new Result($e->getSourceLocation() === ['source'=>'namespace.tpl', 'line'=>2]);
+        }
     }
 }

@@ -7,19 +7,25 @@ use Lucinda\Templating\SystemTag;
 use Lucinda\Templating\ViewException;
 
 /**
- * Implements how a FOREACH clause is translated into a tag.
+ * Translates collection iteration into a PHP foreach block
  *
- * Tag syntax:
- * <:foreach var="EXPRESSION" key="KEYNAME" val="VALUENAME">BODY</:foreach>
+ * The collection expression and value-variable name are required. The key-variable
+ * name is optional. Opening and closing translations surround the repeated body.
+ *
+ * Tag syntax: <:foreach var="${data.items}" key="key" val="value">body</:foreach>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class ForeachTag extends SystemTag implements StartEndTag
+final class ForeachTag extends SystemTag implements StartEndTag
 {
     /**
-     * Parses start tag.
+     * Translates collection iteration into a PHP foreach block
      *
-     * @param  array<string,string> $parameters
-     * @return string
-     * @throws ViewException If required parameters aren't supplied
+     * Requires a collection expression in var and a value variable in val; key is optional.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
+     * @throws ViewException If required attributes or expression syntax are invalid
      */
     public function parseStartTag(array $parameters=[]): string
     {
@@ -31,9 +37,9 @@ class ForeachTag extends SystemTag implements StartEndTag
     }
 
     /**
-     * Parses end tag.
+     * Closes the PHP block opened by this tag
      *
-     * @return string
+     * @return string PHP closing-brace statement
      */
     public function parseEndTag(): string
     {
@@ -41,11 +47,12 @@ class ForeachTag extends SystemTag implements StartEndTag
     }
 
     /**
-     * Verifies if tag has required attributes defined.
+     * Validates collection-iteration attributes and requires an expression for var
      *
-     * @param  array<string,string> $parameters
-     * @param  string[]             $requiredParameters
-     * @throws ViewException If a required attribute is not found.
+     * @param array<string,string> $parameters Parsed collection-iteration attributes
+     * @param string[] $requiredParameters Required names supplied by the opening-tag operation
+     * @return void
+     * @throws ViewException If a required attribute is missing or var is not an expression
      */
     protected function checkParameters(array $parameters, array $requiredParameters): void
     {

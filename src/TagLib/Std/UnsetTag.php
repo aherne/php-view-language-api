@@ -4,21 +4,28 @@ namespace Lucinda\Templating\TagLib\Std;
 
 use Lucinda\Templating\SystemTag;
 use Lucinda\Templating\StartTag;
+use Lucinda\Templating\ViewException;
 
 /**
- * Implements how setting an internal variable is translated into a tag.
+ * Translates variable removal into a PHP unset statement
  *
- * Tag syntax:
- * <:unset var="VARNAME"/>
+ * The required var attribute names the variable removed when the rendered template
+ * executes the generated statement.
+ *
+ * Tag syntax: <:unset var="name"/>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class UnsetTag extends SystemTag implements StartTag
+final class UnsetTag extends SystemTag implements StartTag
 {
     /**
-     * Parses start tag.
+     * Translates variable removal into a PHP unset statement
      *
-     * @param  array<string,string> $parameters
-     * @return string
-     * @throws \Lucinda\Templating\ViewException
+     * Requires var, the name of the variable to remove.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
+     * @throws ViewException If required attributes or expression syntax are invalid
      */
     public function parseStartTag(array $parameters=[]): string
     {

@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\Std;
 use Lucinda\Templating\TagLib\Std\ContinueTag;
 use Lucinda\UnitTest\Result;
 
-class ContinueTagTest
+final class ContinueTagTest
 {
     public function parseStartTag()
     {

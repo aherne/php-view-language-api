@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating;
 use Lucinda\Templating\AttributesParser;
 use Lucinda\UnitTest\Result;
 
-class AttributesParserTest
+final class AttributesParserTest
 {
     public function parse()
     {

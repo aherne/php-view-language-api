@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\Std;
 use Lucinda\Templating\TagLib\Std\ElseifTag;
 use Lucinda\UnitTest\Result;
 
-class ElseifTagTest
+final class ElseifTagTest
 {
     public function parseStartTag()
     {

@@ -6,18 +6,24 @@ use Lucinda\Templating\StartTag;
 use Lucinda\Templating\SystemTag;
 
 /**
- * Implements a BREAK operation in a loop.
+ * Translates a loop-break tag into a PHP break statement
  *
- * Tag syntax:
- * <:break/>
+ * The generated statement ends the nearest executing loop. PHP validates whether
+ * the statement occurs in a legal loop context.
+ *
+ * Tag syntax: <:break/>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class BreakTag extends SystemTag implements StartTag
+final class BreakTag extends SystemTag implements StartTag
 {
     /**
-     * Parses start tag.
+     * Translates a loop-break tag into a PHP break statement
      *
-     * @param  array<string,string> $parameters
-     * @return string
+     * Attributes are unused by this standalone declaration.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
      */
     public function parseStartTag(array $parameters=[]): string
     {

@@ -3,36 +3,20 @@
 namespace Test\Lucinda\Templating;
 
 use Lucinda\Templating\ViewLanguageParser;
+use Lucinda\Templating\History\SourceContext;
 use Lucinda\UnitTest\Result;
 
-class ViewLanguageParserTest
+final class ViewLanguageParserTest
 {
     public function compile()
     {
-        $object = new ViewLanguageParser(
-            __DIR__."/views",
-            "html",
-            dirname(__DIR__)."/compilations",
-            __DIR__."/tags"
-        );
-        $compilationPath = $object->compile("test");
-        return new Result(
-            $this->removeCWD(file_get_contents($compilationPath))=='<!-- VL:START: /tests/views/test.html -->
-<h1><!-- VL:START: /tests/tags/Greeting/client.html -->
-Hello, Lucian!
-<!-- VL:END: /tests/tags/Greeting/client.html -->
-</h1>
-<ul>
-    <?php foreach ($data["users"] as $user) { ?>
-    <li><?php echo $user; ?></li>
-    <?php } ?>
-</ul>
-<!-- VL:END: /tests/views/test.html -->
-');
-    }
-
-    private function removeCWD(string $string): string
-    {
-        return str_replace(getcwd(),"", $string);
+        $object = new ViewLanguageParser(__DIR__."/views", "html", dirname(__DIR__)."/compilations", __DIR__."/tags");
+        $path = $object->compile("test");
+        $php = file_get_contents($path);
+        $offset = strpos($php, 'echo $user;');
+        $line = 1 + substr_count(substr($php, 0, $offset), "\n");
+        return new Result(!str_contains($php, '<!--') && (new SourceContext())->getSourceLocation($path, $line) === [
+            'source'=>__DIR__.'/views/test.html', 'line'=>4
+        ]);
     }
 }

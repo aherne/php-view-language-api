@@ -6,18 +6,24 @@ use Lucinda\Templating\StartTag;
 use Lucinda\Templating\SystemTag;
 
 /**
- * Implements a CONTINUE operation in a loop.
+ * Translates a loop-continue tag into a PHP continue statement
  *
- * Tag syntax:
- * <:continue/>
+ * The generated statement skips to the next loop iteration. PHP validates whether
+ * the statement occurs in a legal loop context.
+ *
+ * Tag syntax: <:continue/>
+ *
+ * @see \Lucinda\Templating\SystemTagParser
  */
-class ContinueTag extends SystemTag implements StartTag
+final class ContinueTag extends SystemTag implements StartTag
 {
     /**
-     * Parses start tag.
+     * Translates a loop-continue tag into a PHP continue statement
      *
-     * @param  array<string,string> $parameters
-     * @return string
+     * Attributes are unused by this standalone declaration.
+     *
+     * @param array<string,string> $parameters Parsed declaration attributes keyed by name
+     * @return string PHP replacement for the opening or standalone declaration
      */
     public function parseStartTag(array $parameters=[]): string
     {

@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating\TagLib\Std;
 use Lucinda\Templating\TagLib\Std\WhileTag;
 use Lucinda\UnitTest\Result;
 
-class WhileTagTest
+final class WhileTagTest
 {
     public function parseStartTag()
     {

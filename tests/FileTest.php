@@ -5,7 +5,7 @@ namespace Test\Lucinda\Templating;
 use Lucinda\Templating\File;
 use Lucinda\UnitTest\Result;
 
-class FileTest
+final class FileTest
 {
     private $object;
 
@@ -14,11 +14,11 @@ class FileTest
         $this->object = new File(__DIR__."/test.txt");
     }
 
-    public function putContents()
+    public function setContents()
     {
-        $this->object->putContents("asdf");
+        $this->object->setContents("asdf");
         $emptyFile = new File(__DIR__."/empty.txt");
-        $emptyFile->putContents("");
+        $emptyFile->setContents("");
         return new Result($emptyFile->getContents()==="");
     }
 
